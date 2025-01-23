@@ -40,7 +40,8 @@ function App() {
     const usedNumberSet = new Set(usedNumbers);
     // Ưu tiên lấy từ danh sách guaranteedNumbers
     if (guaranteedNumbers.length > 0) {
-      const guaranteedNumber = guaranteedNumbers.shift(); // Lấy số đầu tiên và xóa luôn
+      const indexRandom = Math.floor(Math.random() * guaranteedNumbers.length);
+      const guaranteedNumber = guaranteedNumbers?.[indexRandom]; // Lấy số đầu tiên và xóa luôn
       if (guaranteedNumber !== undefined) {
         usedNumberSet.add(guaranteedNumber);
         await handleAddUsed(guaranteedNumber);
