@@ -16,6 +16,7 @@ import { parseArray } from "./common/functions";
 
 const MAX_NUMBER = 136;
 const VITECH_USED_NUMBERS = "VITECH_USED_NUMBERS";
+const LOOP = 5
 
 function App() {
   const [isMouse, setIsMouse] = useState(false);
@@ -36,10 +37,10 @@ function App() {
     ) => {
       gsap.to(elem, {
         y: !reset ? calculator(10) : calculator(number), // Cuộn lên cho mỗi phần tử
-        duration: 1, // Thời gian cuộn
+        duration: 1.2, // Thời gian cuộn
         ease: "none", // Easing cho hiệu ứng cuộn
         stagger: 0.2, // Độ trễ giữa các phần tử để cuộn mượt
-        repeat: !reset ? 2 : 0,
+        repeat: !reset ? LOOP : 0,
         onComplete: () => {
           if (reset) {
             onComplete();
