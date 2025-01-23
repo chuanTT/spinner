@@ -174,7 +174,7 @@ export class Firework {
       ctx.stroke();
       ctx.beginPath();
       // draw the target for this firework with a pulsing circle
-      ctx.arc(this.tx, this.ty, this.targetRadius, 0, Math.PI * 2);
-      ctx.stroke();
+      // ctx.arc(this.tx, this.ty, this.targetRadius, 0, Math.PI * 2);
+      // ctx.stroke();
   }
 }

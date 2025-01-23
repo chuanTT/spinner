@@ -27,7 +27,7 @@ const FireworkCanvas = () => {
     let hue = 120;
     const limiterTotal = 5;
     let limiterTick = 0;
-    const timerTotal = 80;
+    const timerTotal = 60;
     let timerTick = 0;
     const mousedown = false;
     const mx = 0
