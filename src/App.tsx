@@ -196,7 +196,6 @@ function App() {
         </div>
       </div>
       <FireworkCanvas />
-      <FireworkCanvas />
       <div
         className="fixed inset-0 bg-no-repeat bg-cover z-0"
         style={{
