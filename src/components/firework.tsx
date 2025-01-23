@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
-import { Firework, Particle, random } from "./common/firework";
+import { Firework, Particle, random } from "../common/firework";
 
 const FireworkCanvas = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);

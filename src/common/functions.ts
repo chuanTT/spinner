@@ -35,16 +35,6 @@ export const getDataDB = async () => {
   };
 };
 
-export const postData = () => {
-  if ("serviceWorker" in navigator) {
-    if (navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({
-        title: "hello",
-      });
-    }
-  }
-};
-
 export const emitData = (
   socket: Socket<any, any>,
   type: keyof typeof objAction,

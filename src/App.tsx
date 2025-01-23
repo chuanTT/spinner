@@ -1,23 +1,21 @@
-import {
-  Fragment,
-  useCallback,
-  useLayoutEffect,
-  useMemo,
-  useState,
-} from "react";
+import { Fragment, useMemo, useState } from "react";
 import bg from "./assets/images/bg.png";
 import snake1 from "./assets/images/snake-1.png";
 import snake2 from "./assets/images/snake-2.png";
 import snake3 from "./assets/images/snake-3.png";
 import gsap from "gsap";
-import FireworkCanvas from "./firework";
-import { guaranteedNumberDB, initDB, usedNumberDB } from "./common/db";
+import { guaranteedNumberDB, usedNumberDB } from "./common/db";
 import { getDataDB } from "./common/functions";
 import { useLayoutServiceWorker } from "./context";
+import { FireworkCanvas } from "./components";
+import { gsapOne } from "./common/gasp-number";
+import {
+  audioClickFunc,
+  audioLoopRoller,
+  audioWinnerFunc,
+} from "./common/audio-func";
 
 export const MAX_NUMBER = 136;
-// const VITECH_USED_NUMBERS = "VITECH_USED_NUMBERS";
-const LOOP = 5;
 
 function App() {
   const { handleEmitData } = useLayoutServiceWorker();
@@ -25,43 +23,15 @@ function App() {
   const arrayNumber = useMemo(() => MAX_NUMBER?.toString()?.split(""), []);
   const length = arrayNumber?.length;
 
-  const calculator = useCallback((num: number) => `-${(num / 11) * 100}%`, []);
-
-  const gsapOne = useCallback(
-    (
-      elem: HTMLDivElement,
-      number: number,
-      onComplete: () => void,
-      reset: boolean = false
-    ) => {
-      gsap.to(elem, {
-        y: !reset ? calculator(10) : calculator(number), // Cuộn lên cho mỗi phần tử
-        duration: 1.2, // Thời gian cuộn
-        ease: "none", // Easing cho hiệu ứng cuộn
-        stagger: 0.2, // Độ trễ giữa các phần tử để cuộn mượt
-        repeat: !reset ? LOOP : 0,
-        onComplete: () => {
-          if (reset) {
-            onComplete();
-            return;
-          }
-          gsap.set(elem, { y: 0 });
-          gsapOne(elem, number, onComplete, true); // Gọi lại hàm để quay lại khi đã hoàn thành
-        },
-      });
-    },
-    [calculator]
-  );
-
   const handleAddUsed = async (num: number) => {
     await usedNumberDB.add(num);
     handleEmitData("add_used", num);
   };
 
-  const handleDeleteGuaranteed = async(num: number) => {
+  const handleDeleteGuaranteed = async (num: number) => {
     await guaranteedNumberDB.delete(num);
     handleEmitData("delete_guaranteed", num);
-  }
+  };
 
   const randomUnixIndex = async () => {
     const { guaranteedNumbers, usedNumbers } = await getDataDB();
@@ -71,8 +41,8 @@ function App() {
       const guaranteedNumber = guaranteedNumbers.shift(); // Lấy số đầu tiên và xóa luôn
       if (guaranteedNumber !== undefined) {
         usedNumberSet.add(guaranteedNumber);
-        await handleAddUsed(guaranteedNumber)
-        await handleDeleteGuaranteed(guaranteedNumber)
+        await handleAddUsed(guaranteedNumber);
+        await handleDeleteGuaranteed(guaranteedNumber);
         return guaranteedNumber;
       }
     }
@@ -81,7 +51,7 @@ function App() {
     do {
       randomIndex = Math.floor(Math.random() * MAX_NUMBER) + 1;
     } while (usedNumberSet.has(randomIndex)); // Lặp lại nếu số đã tồn tại
-    await handleAddUsed(randomIndex)
+    await handleAddUsed(randomIndex);
     return randomIndex;
   };
 
@@ -104,25 +74,28 @@ function App() {
     const { arrValues } = await handleRandomValue();
     const elems = document.querySelectorAll(".number > div");
     let isDone = false;
+    const loopRoller = audioLoopRoller();
+    loopRoller.loop = true;
     elems.forEach((elem, index) => {
       gsap.set(elem, { y: 0 });
       const number = arrValues?.[index];
       gsapOne(elem as HTMLDivElement, Number(number), () => {
         if (isDone) return;
+        const audioWinner = audioWinnerFunc();
         isDone = true;
+        loopRoller.pause();
+        audioWinner.play();
         setIsSpin(false);
       });
     });
+    const audioClick = audioClickFunc();
+    audioClick.play();
+    loopRoller.play();
     setIsSpin(true);
   };
 
-  useLayoutEffect(() => {
-    initDB();
-  }, []);
-
   return (
     <>
-      {" "}
       <div className="h-screen relative z-[10]">
         <div className="absolute top-[450px] left-1/2 -translate-x-1/2">
           <div className="h-[229px] w-[600px] rounded-lg bg-[#FFC04A] p-[6px]">
@@ -207,6 +180,7 @@ function App() {
           ></div>
         </div>
       </div>
+      <FireworkCanvas />
       <FireworkCanvas />
       <div
         className="fixed inset-0 bg-no-repeat bg-cover z-0"
