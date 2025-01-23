@@ -34,7 +34,6 @@ const Reset = () => {
     <div className="flex flex-col items-center p-5 gap-5">
       <div className="flex justify-end">
         <Button
-          disabled={dataUsedNumbers?.length <= 0}
           onClick={handleRemoveAll}
         >
           Xóa tất cả
