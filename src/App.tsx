@@ -3,7 +3,6 @@ import {
   useCallback,
   useLayoutEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import bg from "./assets/images/bg.png";
@@ -12,19 +11,17 @@ import snake2 from "./assets/images/snake-2.png";
 import snake3 from "./assets/images/snake-3.png";
 import gsap from "gsap";
 import FireworkCanvas from "./firework";
-import { parseArray } from "./common/functions";
+import { guaranteedNumberDB, initDB, usedNumberDB } from "./common/db";
+import { getDataDB } from "./common/functions";
 
-const MAX_NUMBER = 136;
-const VITECH_USED_NUMBERS = "VITECH_USED_NUMBERS";
-const LOOP = 5
+export const MAX_NUMBER = 136;
+// const VITECH_USED_NUMBERS = "VITECH_USED_NUMBERS";
+const LOOP = 5;
 
 function App() {
-  const [isMouse, setIsMouse] = useState(false);
   const [isSpin, setIsSpin] = useState(false);
   const arrayNumber = useMemo(() => MAX_NUMBER?.toString()?.split(""), []);
   const length = arrayNumber?.length;
-  const usedNumbers = useRef<Set<number>>(new Set());
-  const guaranteedNumbers = useRef([]);
 
   const calculator = useCallback((num: number) => `-${(num / 11) * 100}%`, []);
 
@@ -54,20 +51,16 @@ function App() {
     [calculator]
   );
 
-  const setSessionStorage = useCallback((arrSet: Set<number>) => {
-    sessionStorage?.setItem(
-      VITECH_USED_NUMBERS,
-      JSON.stringify(Array.from(arrSet))
-    );
-  }, []);
-
-  const randomUnixIndex = useCallback(() => {
+  const randomUnixIndex = async () => {
+    const { guaranteedNumbers, usedNumbers } = await getDataDB();
+    const usedNumberSet = new Set(usedNumbers);
     // Ưu tiên lấy từ danh sách guaranteedNumbers
-    if (guaranteedNumbers.current.length > 0) {
-      const guaranteedNumber = guaranteedNumbers.current.shift(); // Lấy số đầu tiên và xóa luôn
+    if (guaranteedNumbers.length > 0) {
+      const guaranteedNumber = guaranteedNumbers.shift(); // Lấy số đầu tiên và xóa luôn
       if (guaranteedNumber !== undefined) {
-        usedNumbers.current.add(guaranteedNumber);
-        setSessionStorage(usedNumbers.current);
+        usedNumberSet.add(guaranteedNumber);
+        await usedNumberDB.add(guaranteedNumber);
+        await guaranteedNumberDB.delete(guaranteedNumber);
         return guaranteedNumber;
       }
     }
@@ -75,20 +68,15 @@ function App() {
     let randomIndex;
     do {
       randomIndex = Math.floor(Math.random() * MAX_NUMBER) + 1;
-    } while (usedNumbers.current.has(randomIndex)); // Lặp lại nếu số đã tồn tại
-
-    usedNumbers.current.add(randomIndex); // Thêm số vào Set
-    setSessionStorage(usedNumbers.current);
+    } while (usedNumberSet.has(randomIndex)); // Lặp lại nếu số đã tồn tại
+    await usedNumberDB.add(randomIndex);
     return randomIndex;
-  }, [setSessionStorage]);
+  };
 
-  const handleRandomValue = useCallback((): {
-    arrValues: string[];
-    randomIndex: number;
-  } => {
+  const handleRandomValue = async () => {
     const prefix = "0".repeat(length - 1);
     const numberSlice = -length;
-    const randomIndex = randomUnixIndex();
+    const randomIndex = await randomUnixIndex();
     const arrValues = `${prefix}${randomIndex}`
       .slice(numberSlice)
       .toString()
@@ -97,11 +85,11 @@ function App() {
       arrValues,
       randomIndex,
     };
-  }, [length, randomUnixIndex]);
+  };
 
-  const handleSpiner = useCallback(async () => {
+  const handleSpiner = async () => {
     if (isSpin) return;
-    const { arrValues } = handleRandomValue();
+    const { arrValues } = await handleRandomValue();
     const elems = document.querySelectorAll(".number > div");
     let isDone = false;
     elems.forEach((elem, index) => {
@@ -114,18 +102,11 @@ function App() {
       });
     });
     setIsSpin(true);
-  }, [isSpin, gsapOne, handleRandomValue]);
+  };
 
   useLayoutEffect(() => {
-    if (isMouse) return;
-    const values = sessionStorage.getItem(VITECH_USED_NUMBERS);
-    const newValues = parseArray(values ?? "[]");
-    usedNumbers.current = new Set(newValues);
-    guaranteedNumbers.current = guaranteedNumbers.current.filter(
-      (value) => !newValues.includes(value)
-    );
-    setIsMouse(true);
-  }, [isMouse]);
+    initDB();
+  }, []);
 
   return (
     <>
