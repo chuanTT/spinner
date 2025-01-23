@@ -14,10 +14,12 @@ import {
   audioLoopRoller,
   audioWinnerFunc,
 } from "./common/audio-func";
+import Confetti from "react-confetti-boom";
 
 export const MAX_NUMBER = 136;
 
 function App() {
+  const [isWinner, setIsWinner] = useState(false);
   const { handleEmitData } = useLayoutServiceWorker();
   const [isSpin, setIsSpin] = useState(false);
   const arrayNumber = useMemo(() => MAX_NUMBER?.toString()?.split(""), []);
@@ -79,19 +81,32 @@ function App() {
     elems.forEach((elem, index) => {
       gsap.set(elem, { y: 0 });
       const number = arrValues?.[index];
-      gsapOne(elem as HTMLDivElement, Number(number), () => {
-        if (isDone) return;
-        const audioWinner = audioWinnerFunc();
-        isDone = true;
-        loopRoller.pause();
-        audioWinner.play();
-        setIsSpin(false);
+      gsapOne({
+        elem: elem as HTMLDivElement,
+        number: Number(number),
+        onComplete: () => {
+          if (isDone) return;
+          const audioWinner = audioWinnerFunc();
+          isDone = true;
+          loopRoller.pause();
+          audioWinner.play();
+          setIsSpin(false);
+          setIsWinner(true);
+        },
+        onAlmostFinished: (progress) => {
+          if (progress >= 0.8) {
+            loopRoller.volume = Math.max(0, 1 - (progress - 0.8) * 5); // Âm lượng giảm từ 1 -> 0
+            // Tăng tốc độ vòng quay khi bắt đầu, giảm dần khi gần kết thúc
+            loopRoller.playbackRate = 1 - progress * 0.5; // Tốc độ từ 1 -> 0.5
+          }
+        },
       });
     });
     const audioClick = audioClickFunc();
     audioClick.play();
     loopRoller.play();
     setIsSpin(true);
+    setIsWinner(false);
   };
 
   return (
@@ -188,6 +203,19 @@ function App() {
           backgroundImage: `url(${bg})`,
         }}
       ></div>
+
+      {isWinner && (
+        <div className="fixed inset-0 z-30 pointer-events-none">
+          <Confetti
+            mode="boom"
+            particleCount={250}
+            x={0.5}
+            y={0.5}
+            colors={["#FF7F50", "#00FF00", "#FFC0CB", "#0000FF", "#FFFF00"]}
+            launchSpeed={1.4}
+          />
+        </div>
+      )}
     </>
   );
 }

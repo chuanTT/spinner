@@ -9,7 +9,7 @@ export const audioClickFunc = () => {
 export const audioLoopRoller = () => {
   const audio = new Audio(objAudio.loopRoller);
   audio.volume = 0.4;
-  audio.playbackRate = 2
+  audio.playbackRate = 3
   return audio;
 };
 
