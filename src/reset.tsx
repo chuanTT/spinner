@@ -3,8 +3,10 @@ import { getDataUsedNumbers } from "./common/functions";
 import { Input } from "./components/input";
 import { Button } from "./components/button";
 import { usedNumberDB } from "./common/db";
+import { useLayoutServiceWorker } from "./context";
 
 const Reset = () => {
+  const {handleEmitData} = useLayoutServiceWorker()
   const [dataUsedNumbers, setDataUsedNumbers] = useState<number[]>([]);
 
   const refreshData = async () => {
@@ -14,11 +16,13 @@ const Reset = () => {
 
   const handleRemove = async (num: number) => {
     await usedNumberDB.delete(num);
+    handleEmitData("delete_used", num)
     refreshData();
   };
 
   const handleRemoveAll = async () => {
     await usedNumberDB.clearAll();
+    handleEmitData("delete_all_used", undefined)
     refreshData();
   };
 

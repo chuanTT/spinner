@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Socket } from "socket.io-client";
+import { objAction } from "./action";
 import { guaranteedNumberDB, usedNumberDB } from "./db";
 
 export const parseArray = (arr: string) => {
@@ -9,7 +12,6 @@ export const parseArray = (arr: string) => {
   }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const convertArrayNumber = (arrNumber: any[]): number[] => {
   return arrNumber && Array.isArray(arrNumber) ? (arrNumber as number[]) : [];
 };
@@ -31,4 +33,22 @@ export const getDataDB = async () => {
     guaranteedNumbers,
     usedNumbers,
   };
+};
+
+export const postData = () => {
+  if ("serviceWorker" in navigator) {
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        title: "hello",
+      });
+    }
+  }
+};
+
+export const emitData = (
+  socket: Socket<any, any>,
+  type: keyof typeof objAction,
+  data: any
+) => {
+  return socket.emit("sync_data", { type, data });
 };

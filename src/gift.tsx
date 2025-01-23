@@ -4,7 +4,10 @@ import { MAX_NUMBER } from "./App";
 import { Button } from "./components/button";
 import { Input } from "./components/input";
 import { guaranteedNumberDB } from "./common/db";
+import { useLayoutServiceWorker } from "./context";
+
 const Gift = () => {
+  const { handleEmitData } = useLayoutServiceWorker();
   const inputRef = useRef<HTMLInputElement>(null);
   const [dataGuaranteed, setDataGuaranteed] = useState<number[]>([]);
 
@@ -36,11 +39,13 @@ const Gift = () => {
     }
     await guaranteedNumberDB.add(newValue);
     await refreshData();
+    handleEmitData("add_guaranteed", newValue);
     refreshInput();
   };
 
   const handleRemove = async (num: number) => {
     await guaranteedNumberDB.delete(num);
+    handleEmitData("delete_guaranteed", num);
     refreshData();
   };
 

@@ -13,12 +13,14 @@ import gsap from "gsap";
 import FireworkCanvas from "./firework";
 import { guaranteedNumberDB, initDB, usedNumberDB } from "./common/db";
 import { getDataDB } from "./common/functions";
+import { useLayoutServiceWorker } from "./context";
 
 export const MAX_NUMBER = 136;
 // const VITECH_USED_NUMBERS = "VITECH_USED_NUMBERS";
 const LOOP = 5;
 
 function App() {
+  const { handleEmitData } = useLayoutServiceWorker();
   const [isSpin, setIsSpin] = useState(false);
   const arrayNumber = useMemo(() => MAX_NUMBER?.toString()?.split(""), []);
   const length = arrayNumber?.length;
@@ -51,6 +53,16 @@ function App() {
     [calculator]
   );
 
+  const handleAddUsed = async (num: number) => {
+    await usedNumberDB.add(num);
+    handleEmitData("add_used", num);
+  };
+
+  const handleDeleteGuaranteed = async(num: number) => {
+    await guaranteedNumberDB.delete(num);
+    handleEmitData("delete_guaranteed", num);
+  }
+
   const randomUnixIndex = async () => {
     const { guaranteedNumbers, usedNumbers } = await getDataDB();
     const usedNumberSet = new Set(usedNumbers);
@@ -59,8 +71,8 @@ function App() {
       const guaranteedNumber = guaranteedNumbers.shift(); // Lấy số đầu tiên và xóa luôn
       if (guaranteedNumber !== undefined) {
         usedNumberSet.add(guaranteedNumber);
-        await usedNumberDB.add(guaranteedNumber);
-        await guaranteedNumberDB.delete(guaranteedNumber);
+        await handleAddUsed(guaranteedNumber)
+        await handleDeleteGuaranteed(guaranteedNumber)
         return guaranteedNumber;
       }
     }
@@ -69,7 +81,7 @@ function App() {
     do {
       randomIndex = Math.floor(Math.random() * MAX_NUMBER) + 1;
     } while (usedNumberSet.has(randomIndex)); // Lặp lại nếu số đã tồn tại
-    await usedNumberDB.add(randomIndex);
+    await handleAddUsed(randomIndex)
     return randomIndex;
   };
 
@@ -110,6 +122,7 @@ function App() {
 
   return (
     <>
+      {" "}
       <div className="h-screen relative z-[10]">
         <div className="absolute top-[450px] left-1/2 -translate-x-1/2">
           <div className="h-[229px] w-[600px] rounded-lg bg-[#FFC04A] p-[6px]">
