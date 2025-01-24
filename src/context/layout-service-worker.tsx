@@ -26,7 +26,7 @@ const LayoutServiceWorker: FC<PropsWithChildren> = ({ children }) => {
   const [socketClient, setSocketClient] = useState<Socket>();
 
   useEffect(() => {
-    const socket = io("https://socket-production-93c3.up.railway.app", {
+    const socket = io(import.meta.env.VITE_BASE_SOCKET, {
       addTrailingSlash: true,
       autoConnect: true,
     });
